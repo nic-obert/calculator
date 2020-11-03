@@ -1,7 +1,7 @@
 #include "definitions.h"
 
 
-Token* getHighestPriority(const Token* tokens)
+Token* getHighestPriority(Token* tokens)
 {
     while (tokens->type != NULL_T)
         ++ tokens;
@@ -23,7 +23,7 @@ void evaluate(Token* tokens)
         {
         case ADD_T:
             break;
-            
+
         case SUB_T:
             break;
         

@@ -3,8 +3,8 @@
 
 #include "definitions.h"
 
-#define isNumber(x) (47 < x < 58)
-#define isLetter(x) (96 < x < 123)
+#define isNumber(x) (47 < x && x < 58)
+#define isLetter(x) (96 < x && x < 123)
 #define compare(x, y) (strcmp(x, (const char*)y))
 
 
@@ -12,7 +12,7 @@ Token* parse(const char* expr)
 {   
     size_t length = strlen(expr);
     // Token* tokens should be a null-token-terminated array
-    Token* tokens = (Token*)malloc(sizeof(Token) * length);
+    Token* tokens = (Token*)malloc(sizeof(Token) * (length + 1)); // +1 to avoid buffer overflows
     // current token
     Token* token = tokens;
 
@@ -64,6 +64,14 @@ Token* parse(const char* expr)
                 token->type = NUM_T;
                 token->priority = NUM_P;
                 token->value = expr[i] - 48; // ASCII 0 is 48
+                i ++;
+
+                // check if character is part of a bigger number
+                for (; isNumber(expr[i]); i++)
+                {
+                    token->value = token->value * 10 + expr[i] - 48;
+                }
+                i --;
             }
 
             else if (isLetter(expr[i]))
