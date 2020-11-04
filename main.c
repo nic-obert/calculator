@@ -16,7 +16,12 @@ int main(int argc, char const *argv[])
 
     // heap-allocated array --> to free
     Token* tokens = parse(argv[1]);
-    
+
+    printTokens(tokens);
+
+    evaluate(tokens);
+
+    printf("\n\n");
 
     printTokens(tokens);
 

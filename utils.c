@@ -18,8 +18,6 @@ char* typeNames[] = {
 
 void printTokens(Token* tokens)
 {
-    for (; tokens->type != NULL_T; ++tokens)
-    {
+    for (; tokens->next != NULL; tokens=tokens->next)
         printf("<%s> %f (%d)\n", typeNames[tokens->type], tokens->value, tokens->priority);
-    }
 }

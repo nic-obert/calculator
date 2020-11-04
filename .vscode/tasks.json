@@ -8,7 +8,8 @@
                 "-g",
                 "${workspaceFolder}/main.c",
                 "-o",
-                "${workspaceFolder}/build/main.out"
+                "${workspaceFolder}/build/main.out",
+                "-lm"
             ],
             "options": {
                 "cwd": "/usr/bin"

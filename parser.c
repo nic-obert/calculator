@@ -10,18 +10,16 @@
 
 Token* parse(const char* expr)
 {   
-    size_t length = strlen(expr);
-    // Token* tokens should be a null-token-terminated array
-    Token* tokens = (Token*)malloc(sizeof(Token) * (length + 1)); // +1 to avoid buffer overflows
+    // Token* tokens should be a linked list
+    Token* tokens = (Token*)malloc(sizeof(Token));
     // current token
     Token* token = tokens;
+    token->prev = NULL;
 
-
-    for (unsigned int i = 0; i != length; i++)
+    for (; *expr != '\0'; ++expr)
     {
 
-
-        switch (expr[i])
+        switch (*expr)
         {
         // switch for single-character operators
         
@@ -59,37 +57,37 @@ Token* parse(const char* expr)
 
         default:
 
-            if (isNumber(expr[i]))
+            if (isNumber(*expr))
             {
                 token->type = NUM_T;
                 token->priority = NUM_P;
-                token->value = expr[i] - 48; // ASCII 0 is 48
-                i ++;
+                token->value = *expr - 48; // ASCII 0 is 48
+                expr ++;
 
                 // check if character is part of a bigger number
-                for (; isNumber(expr[i]); i++)
+                for (; isNumber(*expr); ++expr)
                 {
-                    token->value = token->value * 10 + expr[i] - 48;
+                    token->value = token->value * 10 + *expr - 48;
                 }
-                i --;
+                expr --;
             }
 
-            else if (isLetter(expr[i]))
+            else if (isLetter(*expr))
             {
                 // create a zero-initialized buffer for lettrs of function name to be stored
                 char letterBuffer[9] = {0,0,0,0,0,0,0,0,0};
                 unsigned char letterBufferIndex = 0;
-                letterBuffer[letterBufferIndex] = expr[i];
-                i ++;
+                letterBuffer[letterBufferIndex] = *expr;
+                expr ++;
 
                 // as long as current character is a letter --> build the function name
-                for (; isLetter(expr[i]); i++)
+                for (; isLetter(*expr); ++expr)
                 {
-                    letterBuffer[letterBufferIndex] = expr[i];
+                    letterBuffer[letterBufferIndex] = *expr;
                     letterBufferIndex ++;
                 }
                 // reduce index
-                i --;
+                expr --;
 
                 if (compare("sqrt", letterBuffer))
                 {
@@ -105,14 +103,15 @@ Token* parse(const char* expr)
 
         } // end of switch statement
         
-        // increment token index
-        ++ token;
-
+        // add a token to the linked list
+        token->next = (Token*)malloc(sizeof(Token));
+        token->next->prev = token;
+        token = token->next;
         
     } // end of for loop
 
-    // append a null-Token to the null-Token-terminated Token* tokens array
-    token->type = NULL_T;
+    // the end of the linked list
+    token->next = NULL;
 
     // return the heap-allocated tokenized array
     return tokens;
