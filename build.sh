@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc main.c -o build/main.out -lm
+gcc source/main.c -o build/main.out -lm
