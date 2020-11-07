@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 // token types
 
 #define ADD_T 1
@@ -21,7 +23,7 @@
 #define DIV_P 4
 #define POW_P 5
 #define SQRT_P 5
-#define PAREN_P 10
+#define PAREN_P 9
 
 
 typedef struct Token {
@@ -32,3 +34,46 @@ typedef struct Token {
     struct Token* prev;
 } Token;
 
+
+Token* appendToken(Token* last)
+{
+    Token* token = (Token*)malloc(sizeof(Token));
+    last->next = token;
+    token->prev = last;
+    token->next = NULL;
+}
+
+
+void removeUnaryOperator(Token* token)
+{   
+    if (token->next == NULL)
+        token->prev->next = NULL;
+
+    else if (token->prev == NULL)
+        token->next->prev = NULL;
+
+    else {
+        token->next->prev = token->prev;
+        token->prev->next = token->next;
+    }
+        
+    free(token);
+}
+
+
+void removeBinaryOperator(Token* token)
+{
+    if (token->next->next == NULL) {
+        // set previous token's next to NULL
+        token->prev->next = NULL;
+
+    } else {
+        // set previous token's next to next token's next token
+        token->prev->next = token->next->next;
+        // set next token's next's previous to previous token
+        token->next->next->prev = token->prev;
+    }
+    // free pointers
+    free(token->next);
+    free(token);
+}

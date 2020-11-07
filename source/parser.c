@@ -16,7 +16,7 @@ Token* parse(const char* expr)
     Token* token = tokens;
     token->prev = NULL;
 
-    for (; *expr != '\0'; ++expr)
+    while (1)
     {
 
         switch (*expr)
@@ -103,15 +103,16 @@ Token* parse(const char* expr)
 
         } // end of switch statement
         
-        // add a token to the linked list
-        token->next = (Token*)malloc(sizeof(Token));
-        token->next->prev = token;
-        token = token->next;
-        
-    } // end of for loop
+        expr ++;
+        if (*expr == '\0') 
+            break;
 
-    // the end of the linked list
-    token->next = NULL;
+        // append a token to the linked list
+        token = appendToken(token);
+
+        
+    } // end of parsing loop
+
 
     // return the heap-allocated tokenized array
     return tokens;

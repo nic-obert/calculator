@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/main.out",
-            "args": ["9+1+2"],
+            "args": ["(1+1)"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

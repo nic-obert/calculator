@@ -7,7 +7,7 @@
 Token* getHighestPriority(Token* tokens)
 {   
     Token* highest = tokens;
-    for (; tokens != NULL; tokens=tokens->next  )
+    for (; tokens != NULL; tokens=tokens->next)
     {
         if (tokens->priority > highest->priority)
             highest = tokens;
@@ -19,7 +19,7 @@ Token* getHighestPriority(Token* tokens)
 }
 
 
-void evaluate(Token* tokens)
+Token* evaluate(Token* tokens)
 {
     while (1)
     {   
@@ -30,52 +30,67 @@ void evaluate(Token* tokens)
         switch (token->type)
         {
         case ADD_T:
-            // update value
             token->prev->value += token->next->value;
-            // remove redundant tokens from linked list
-            token->next->next->prev = token->prev; // set next token's prev to the resulting token
-            token->prev->next = token->next->next; // set previous token's next to the next token
-            // free the pointers to avoid memory leaks
-            free(token->next);
-            free(token);
+            removeBinaryOperator(token);
             break;
 
         case SUB_T:
             token->prev->value -= token->next->value;
-            token->next->next->prev = token->prev;
-            token->prev->next = token->next->next;
-            free(token->next);
-            free(token);
+            removeBinaryOperator(token);
             break;
         
         case MUL_T:
             token->prev->value *= token->next->value;
-            token->next->next->prev = token->prev;
-            token->prev->next = token->next->next;
-            free(token->next);
-            free(token);
+            removeBinaryOperator(token);
             break;
         
         case DIV_T:
             token->prev->value /= token->next->value;
-            token->next->next->prev = token->prev;
-            token->prev->next = token->next->next;
-            free(token->next);
-            free(token);
+            removeBinaryOperator(token);
             break;
         
         case POW_T:
             token->prev->value = pow(token->prev->value, token->next->value);
-            token->next->next->prev = token->prev;
-            token->prev->next = token->next->next;
-            free(token->next);
-            free(token);
+            removeBinaryOperator(token);
+            break;
+        
+        case L_PAREN_T: ; // this semicolon has to be here
+            // search for closing parenthesis while updating priorities
+            Token* tok = token->next;
+            unsigned char parenCount = 1;
+            while (1)
+            {
+                if (tok->type == L_PAREN_T)
+                    parenCount ++;
+                else if (tok->type == R_PAREN_T)
+                {
+                    parenCount --;
+                    if (parenCount == 0)
+                        break;
+                }
+                
+                if (tok->type != NUM_T)
+                    tok->priority += PAREN_P;
+                tok = tok->next;
+            }
+
+            // to prevent from freeing the array
+            if (token->prev == NULL)
+                tokens = token->next;
+
+            // remove opening parenthesis
+            removeUnaryOperator(token);
+            // remove closing parenthesis
+            removeUnaryOperator(tok);
+
             break;
         
         default:
-            // TODO implement error
-            printf("Token evaluation error");
+            printf("Evaluation error occurred\n");
             break;
         }
     }
+
+    tokens->next = NULL;
+    return tokens;
 }

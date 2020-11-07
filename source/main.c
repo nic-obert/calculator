@@ -19,7 +19,7 @@ int main(int argc, char const *argv[])
 
     printTokens(tokens);
 
-    evaluate(tokens);
+    tokens = evaluate(tokens);
 
     printf("\n\n");
 
