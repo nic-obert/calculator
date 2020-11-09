@@ -10,6 +10,8 @@
 
 Token* parse(const char* expr)
 {   
+
+    // 1+1
     // Token* tokens should be a linked list
     Token* tokens = (Token*)malloc(sizeof(Token));
     // current token
@@ -23,34 +25,34 @@ Token* parse(const char* expr)
         {
         // switch for single-character operators
         
-        case '+':
-            token->type = ADD_T;
-            token->priority = ADD_P;
-            break;
-        case '-':
-            token->type = SUB_T;
-            token->priority = SUB_P;
-            break;
-        case '*':
-            token->type = MUL_T;
-            token->priority = MUL_P;
-            break;
-        case '/':
-            token->type = DIV_T;
-            token->priority = DIV_P;
-            break;
-        case '^':
-            token->type = POW_T;
-            token->priority = POW_P;
-            break;
-        case '(':
-            token->type = L_PAREN_T;
-            token->priority = PAREN_P;
-            break;
-        case ')':
-            token->type = R_PAREN_T;
-            token->priority = PAREN_P;
-            break;
+            case '+':
+                token->type = ADD_T;
+                token->priority = ADD_P;
+                break;
+            case '-':
+                token->type = SUB_T;
+                token->priority = SUB_P;
+                break;
+            case '*':
+                token->type = MUL_T;
+                token->priority = MUL_P;
+                break;
+            case '/':
+                token->type = DIV_T;
+                token->priority = DIV_P;
+                break;
+            case '^':
+                token->type = POW_T;
+                token->priority = POW_P;
+                break;
+            case '(':
+                token->type = L_PAREN_T;
+                token->priority = PAREN_P;
+                break;
+            case ')':
+                token->type = R_PAREN_T;
+                token->priority = PAREN_P;
+                break;
 
 
         // for operators longer than 1 character / numbers
