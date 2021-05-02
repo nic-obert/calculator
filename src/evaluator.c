@@ -87,7 +87,9 @@ Token* evaluate(Token* tokens)
         
         default:
             printf("Evaluation error occurred\n");
-            break;
+            printf("Token was: %uc %f\n", token->type, token->value);
+            exit(EXIT_FAILURE);
+
         }
     }
 
