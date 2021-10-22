@@ -18,6 +18,7 @@ class TokenType(Enum):
     CLOSE_PARENTHESIS = 'CLOSE_PARENTHESIS'
     FUNCTION = 'FUNCTION'
 
+
 priority_map: Dict[TokenType, int] = {
     TokenType.NUMBER: 0,
     TokenType.CLOSE_PARENTHESIS: 0,
@@ -30,7 +31,9 @@ priority_map: Dict[TokenType, int] = {
     TokenType.OPEN_PARENTHESIS: 5
 }
 
+
 MAX_PRIORITY = priority_map[TokenType.OPEN_PARENTHESIS]
+
 
 def get_token_type_priority(type: TokenType) -> int:
     return priority_map[type]
@@ -42,6 +45,9 @@ class Token:
         self.type = type
         self.priority = base_priority + get_token_type_priority(self.type)
         self.value = value
+
+    def __repr__(self) -> str:
+        return f'<{self.type}: {self.value} ({self.priority})>'
 
 
 def get_expression() -> str:
@@ -111,12 +117,12 @@ def tokenize_expression(expression: str) -> List[Token]:
             token_list.append(Token(TokenType.POWER, base_priority))
             continue
         if char == '(':
+            base_priority += MAX_PRIORITY
             token_list.append(Token(TokenType.OPEN_PARENTHESIS, base_priority))
-            base_priority += TokenType.MAX_PRIORITY
             continue
         if char == ')':
+            base_priority -= MAX_PRIORITY
             token_list.append(Token(TokenType.CLOSE_PARENTHESIS, base_priority))
-            base_priority -= TokenType.MAX_PRIORITY
             continue
         
         if is_function_name(char):
@@ -160,15 +166,14 @@ def remove_binary_operands(token_list: List[Token], index: int) -> None:
 
 def find_closing_parenthesis_index(token_list: List[Token], index: int) -> int:
     parenthesis_depth = 1
-    index = 0
     for token in token_list[index + 1:]:
+        index += 1
         if token.type == TokenType.OPEN_PARENTHESIS:
             parenthesis_depth += 1
         elif token.type == TokenType.CLOSE_PARENTHESIS:
             parenthesis_depth -= 1
             if parenthesis_depth == 0:
                 return index
-        index += 1
 
 
 def evaluate_expression(token_list: List[Token]) -> Union[float, int]:
@@ -242,7 +247,7 @@ def evaluate_expression(token_list: List[Token]) -> Union[float, int]:
 
 def print_token_list(token_list: List[Token]) -> None:
     for token in token_list:
-        print(f'<{token.type}: {token.value} ({token.priority})>')
+        print(token)
 
 
 def main() -> None:
