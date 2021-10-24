@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 # Allows classes to reference themselves
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 from enum import Enum
+import math
+
+
+class InvalidExpressionError(Exception):
+    pass
 
 
 # Mimicing a C enum
 class TokenType(Enum):
     
     NUMBER = 'NUMBER'
+    NEGATIVE_NUMBER = 'NEGATIVE_NUMBER'
     SUM = 'SUM'
     SUBTRACTION = 'SUBTRACTION'
     MULTIPLICATION = 'MULTIPLICATION'
@@ -21,6 +27,7 @@ class TokenType(Enum):
 
 priority_map: Dict[TokenType, int] = {
     TokenType.NUMBER: 0,
+    TokenType.NEGATIVE_NUMBER: 0,
     TokenType.CLOSE_PARENTHESIS: 0,
     TokenType.SUM: 1,
     TokenType.SUBTRACTION: 1,
@@ -43,17 +50,72 @@ class Token:
     
     def __init__(self, type: TokenType, base_priority: int, value: Any = None) -> None:
         self.type = type
-        self.priority = base_priority + get_token_type_priority(self.type)
+        self.priority = get_token_type_priority(self.type)
+        if (self.priority != 0): self.priority += base_priority
         self.value = value
 
     def __repr__(self) -> str:
         return f'<{self.type}: {self.value} ({self.priority})>'
 
 
+Number = Union[int, float]
+Function = Callable[[List[Token]], Number]
+
+
+def sqrt(args: Tuple[Token]) -> Number:
+    radicand = args[0].value
+    
+    # Check if the root index is even.
+    # If so, check if the radicand is negative and eventually throw an error.
+    if radicand < 0:
+        raise InvalidExpressionError(f'Invalid expression: radicand of root with even index cannot be negative')
+
+    return math.sqrt(radicand)
+
+
+def nroot(args: Tuple[Token, Token]) -> Number:
+    radicand = args[0].value
+    index = args[1].value
+
+    # Check if the root index is even.
+    # If so, check if the radicand is negative and eventually throw an error.
+    if index % 2 == 0:
+        if radicand < 0:
+            raise InvalidExpressionError(f'Invalid expression: radicand of root with even index cannot be negative')
+
+    # Return the index-root of the radicand.
+    return radicand ** (1.0 / index)
+
+
+def sin(args: Tuple[Token]) -> Number:
+    radians = math.radians(args[0].value)
+    return math.sin(radians)
+
+
+def cos(args: Tuple[Token]) -> Number:
+    radians = math.radians(args[0].value)
+    return math.cos(radians)
+
+
+def tan(args: Tuple[Token]) -> Number:
+    radians = math.radians(args[0].value)
+    return math.tan(radians)
+
+
+function_map: Dict[str, Function] = \
+{
+    'sqrt': sqrt,
+    'nroot': nroot,
+    'sin': sin,
+    'cos': cos,
+    'tan': tan
+}
+
+
 def get_expression() -> str:
     while True:
         try:
-            expression = input('Enter your mathematical expression\n> ').strip()
+            expression = input('Enter your mathematical expression\n> ').strip().replace(' ', '')
             if expression == 'exit':
                 exit(0)
             if len(expression) > 0:
@@ -88,6 +150,18 @@ def tokenize_expression(expression: str) -> List[Token]:
                 token_list.append(token)
                 token = None
             
+            elif token.type == TokenType.NEGATIVE_NUMBER:
+                if char.isdigit():
+                    token.value *= 10
+                    token.value -= int(char)
+                    continue
+                # If value of negative number token is 0, it means that a standalone '-' was provided.
+                # Consequently, throw an error.
+                if token.value == 0:
+                    raise InvalidExpressionError(f'Invalid expression "{expression}": subtraction operator \'-\' not allowed in this context')
+                token_list.append(token)
+                token = None
+
             elif token.type == TokenType.FUNCTION:
                 if is_function_name(char):
                     token.value += char
@@ -105,7 +179,10 @@ def tokenize_expression(expression: str) -> List[Token]:
             token_list.append(Token(TokenType.SUM, base_priority))
             continue
         if char == '-':
-            token_list.append(Token(TokenType.SUBTRACTION, base_priority))
+            if len(token_list) != 0 and token_list[-1].type == TokenType.NUMBER:
+                token_list.append(Token(TokenType.SUBTRACTION, base_priority))
+            else:
+                token = Token(TokenType.NEGATIVE_NUMBER, base_priority, 0)
             continue
         if char == '*':
             token_list.append(Token(TokenType.MULTIPLICATION, base_priority))
@@ -124,13 +201,15 @@ def tokenize_expression(expression: str) -> List[Token]:
             base_priority -= MAX_PRIORITY
             token_list.append(Token(TokenType.CLOSE_PARENTHESIS, base_priority))
             continue
+        if char == ',':
+            continue
         
         if is_function_name(char):
             token = Token(TokenType.FUNCTION, base_priority, char)
             continue
         
             
-        raise ValueError(f"The expression {expression} contains an error: invalid character '{char}'")
+        raise InvalidExpressionError(f"The expression {expression} contains an error: invalid character '{char}'")
     
     # Eventually, add the last token of the list, if it wasn't added before
     if token is not None:
@@ -176,7 +255,7 @@ def find_closing_parenthesis_index(token_list: List[Token], index: int) -> int:
                 return index
 
 
-def evaluate_expression(token_list: List[Token]) -> Union[float, int]:
+def evaluate_expression(token_list: List[Token]) -> Number:
     while True:
         token_index = get_highest_priority_token_index(token_list)
         token = token_list[token_index]
@@ -190,37 +269,37 @@ def evaluate_expression(token_list: List[Token]) -> Union[float, int]:
             left_operand, right_operand = get_binary_operands(token_list, token_index)
             result = left_operand.value + right_operand.value
             token.type = TokenType.NUMBER
-            token.value = token.value = result
+            token.value = result
             remove_binary_operands(token_list, token_index)
 
         elif token.type == TokenType.SUBTRACTION:
             left_operand, right_operand = get_binary_operands(token_list, token_index)
             result = left_operand.value - right_operand.value
             token.type = TokenType.NUMBER
-            token.value = token.value = result
+            token.value = result
             remove_binary_operands(token_list, token_index)
         
         elif token.type == TokenType.MULTIPLICATION:
             left_operand, right_operand = get_binary_operands(token_list, token_index)
             result = left_operand.value * right_operand.value
             token.type = TokenType.NUMBER
-            token.value = token.value = result
+            token.value = result
             remove_binary_operands(token_list, token_index)
         
         elif token.type == TokenType.DIVISION:
             left_operand, right_operand = get_binary_operands(token_list, token_index)
             if right_operand.value == 0:
-                raise ZeroDivisionError('Invalid expression: cannot divide by zero')
+                raise InvalidExpressionError('Invalid expression: cannot divide by zero')
             result = left_operand.value / right_operand.value
             token.type = TokenType.NUMBER
-            token.value = token.value = result
+            token.value = result
             remove_binary_operands(token_list, token_index)
         
         elif token.type == TokenType.POWER:
             left_operand, right_operand = get_binary_operands(token_list, token_index)
             result = left_operand.value ** right_operand.value
             token.type = TokenType.NUMBER
-            token.value = token.value = result
+            token.value = result
             remove_binary_operands(token_list, token_index)
         
         elif token.type == TokenType.OPEN_PARENTHESIS:
@@ -241,8 +320,14 @@ def evaluate_expression(token_list: List[Token]) -> Union[float, int]:
                 token_list.pop(token_index)
         
         elif token.type == TokenType.FUNCTION:
-            # TODO define a function dictionary
-            pass
+            parenthesis = token_list[token_index + 1]
+            function = function_map.get(token.value)
+            if function is None:
+                raise InvalidExpressionError(f'Invalid expression: undefined function "{token.value}"')
+            # parenthesis' value is the list of argument tokens
+            token.value = function(parenthesis.value)
+            token.type = TokenType.NUMBER
+            token_list.pop(token_index + 1)
 
 
 def print_token_list(token_list: List[Token]) -> None:
@@ -260,7 +345,7 @@ def main() -> None:
             print(f'The result is {result}')
         except KeyboardInterrupt:
             break
-        except Exception as exc:
+        except InvalidExpressionError as exc:
             print(exc)
             continue    
         
