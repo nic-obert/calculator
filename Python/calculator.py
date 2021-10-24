@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# Allows classes to reference themselves
-from __future__ import annotations
 from typing import Any, Callable, Dict, List, Tuple, Union
 from enum import Enum
 import math
@@ -25,6 +23,7 @@ class TokenType(Enum):
     FUNCTION = 'FUNCTION'
 
 
+# Python dictionary that maps a TokenType to an integer priority value
 priority_map: Dict[TokenType, int] = {
     TokenType.NUMBER: 0,
     TokenType.NEGATIVE_NUMBER: 0,
@@ -48,14 +47,23 @@ def get_token_type_priority(type: TokenType) -> int:
 
 class Token:
     
+    # Class initialization function, similar to other languages' constructor
     def __init__(self, type: TokenType, base_priority: int, value: Any = None) -> None:
         self.type = type
+
         self.priority = get_token_type_priority(self.type)
-        if (self.priority != 0): self.priority += base_priority
+        # If the token type has priority 0 it shouldn't ever be executed, so don't add the base priority
+        if (self.priority != 0):
+            self.priority += base_priority
+
         self.value = value
 
+    # Functions for printing the token in a neater way for debugging. They are not mandatory.
     def __repr__(self) -> str:
         return f'<{self.type}: {self.value} ({self.priority})>'
+    
+    def __str__(self) -> str:
+        return self.__repr__()
 
 
 Number = Union[int, float]
@@ -115,15 +123,23 @@ function_map: Dict[str, Function] = \
 def get_expression() -> str:
     while True:
         try:
-            expression = input('Enter your mathematical expression\n> ').strip().replace(' ', '')
+            # Get the input from the terminal. Remove any whitespaces as they're not useful.
+            expression = input('Enter your mathematical expression\n> ').replace(' ', '')
+            # Add an "exit" command to terminate the script
             if expression == 'exit':
                 exit(0)
+            # Check if the input string isn't empty
             if len(expression) > 0:
                 break
+        
         except KeyboardInterrupt:
+            # In case of Ctrl-C, ask again for input
             continue
+        
         except EOFError:
+            # If Ctrl-D is hit, terminate the script
             exit(0)
+    
     return expression
 
 
@@ -336,20 +352,30 @@ def print_token_list(token_list: List[Token]) -> None:
 
 
 def main() -> None:
+    # Run the calculator indefinitely
     while True:
         try:
+            # Get the mathematical expression input string from the user
             expression = get_expression()
+            # Tokenize the input string
             token_list = tokenize_expression(expression)
-            print_token_list(token_list)
+            # print_token_list(token_list)
+            # Calculate the expression's result
             result = evaluate_expression(token_list)
+            # Finally print the result
             print(f'The result is {result}')
+        
         except KeyboardInterrupt:
+            # Terminate the loop when Ctrl-C is hit
             break
+        
         except InvalidExpressionError as exc:
+            # In case of an invalid mathematical expression, print what's the problem
             print(exc)
             continue    
         
 
+# Run the main function only if the script was run directly
 if __name__ == '__main__':
     main()
 
