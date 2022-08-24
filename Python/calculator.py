@@ -2,6 +2,7 @@
 from typing import Any, Callable, Dict, List, Tuple, Union
 from enum import Enum
 import math
+from sys import argv
 
 
 # Custom error that indicates an error in the mathematical expression.
@@ -435,6 +436,14 @@ def print_token_list(token_list: List[Token]) -> None:
 
 
 def main() -> None:
+    if len(argv) == 2:
+        expression = argv[1].replace(' ', '')
+        token_list = tokenize_expression(expression)
+        # print_token_list(token_list)
+        result = evaluate_expression(token_list)
+        print(result)
+        exit(0)
+
     # Run the calculator indefinitely
     while True:
         try:
